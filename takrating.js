@@ -9,7 +9,7 @@ var participationlimit=10
 var participationcutoff=1500
 
 //File names:
-var databasepath="games_anon (25).db"
+var databasepath="games_anon.db"
 var resultfile="ratings.txt"
 
 //Statistics parameters, does not affect rating calculation:
@@ -164,16 +164,16 @@ function main(error){
 		var ratingsumt=0
 		var hiddensum=0
 		for(a=0;a<playerlist.length;a++){
+                        var bot = 0;
 			ratingsumt+=playerlist[a].rating
 			hiddensum+=playerlist[a].hidden
-			if(/bot/i.test(playerlist[a].name)){
-				console.log("Bot: "+playerlist[a].name)
-			}
 			var listname=playerlist[a].name
 			if(isbot(playerlist[a].name)){
-				listname="*"+listname+"*"
+				bot = 1;
 			}
-			out+=(a+1)+"\\. | "+listname+" | "+(playerlist[a].displayrating===playerlist[a].rating?"":"\\*")+Math.floor(playerlist[a].displayrating)+" | "+sign(Math.floor(playerlist[a].displayrating)-Math.floor(playerlist[a].oldrating))+" | "+playerlist[a].games+"\r\n"
+                  listname.split(" ").forEach(function(name) {
+                    out += a+","+name+","+bot+","+playerlist[a].rating+","+playerlist[a].games+"\n";
+                  });
 		}
 		fs.writeFileSync(resultfile,out)
 		console.log("Games: "+games)
