@@ -235,7 +235,7 @@ function main(error){
 			return name!=="Anon" && name!=="FriendlyBot" && name!=="cutak_bot" && name!=="antakonistbot" && !/^Guest[0-9]+$/.test(name) //&& isbot(name)!==1
 		}
 		function isbot(name){
-			return {"TakticianBot":1,"alphatak_bot":1,"alphabot":1,"cutak_bot":1,"TakticianBotDev":1,"takkybot":1,"ShlktBot":1,"AlphaTakBot_5x5":1,"BeginnerBot":1,"alphatak_bot alphabot":1,"TakticianBot TakticianBotDev":1,"TakkerusBot":1,"IntuitionBot":1}[name]
+		  return {"TakticianBot":1,"alphatak_bot":1,"alphabot":1,"cutak_bot":1,"TakticianBotDev":1,"takkybot":1,"ShlktBot":1,"AlphaTakBot_5x5":1,"BeginnerBot":1,"alphatak_bot alphabot":1,"TakticianBot TakticianBotDev":1,"TakkerusBot":1,"IntuitionBot":1,"TakkenBot":1}[name]
 		}
 		function printcurrentscore(pl,opponent){
 			console.log(players["!"+pl].rating+" "+opponent)
