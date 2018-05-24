@@ -9,7 +9,7 @@ var participationlimit=10
 var participationcutoff=1500
 
 //File names:
-var databasepath="games_anon.db"
+var databasepath=process.argv[2] || "games_anon.db"
 var resultfile="ratings.txt"
 
 //Statistics parameters, does not affect rating calculation:
