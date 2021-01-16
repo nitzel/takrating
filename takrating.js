@@ -211,7 +211,7 @@ function main(sqlError) {
     }
     console.log(data[data.length - 1]);
     // console.log(players.TreffnonX)
-    delete players["!TreffnonX"];
+    delete players.TreffnonX;
 
     const playerlist = Object.values(players);
 
@@ -312,11 +312,11 @@ function main(sqlError) {
     }
 
     function strength(name) {
-      return 10 ** (players[`!${name}`].rating / 400);
+      return 10 ** (players[name].rating / 400);
     }
 
     function adjustPlayer(playerName, amount, fairness) {
-      const player = players[`!${playerName}`];
+      const player = players[playerName];
       const bonus = Math.max(0, amount * player.hidden * bonusfactor / bonusrating);
       player.hidden -= bonus;
       const k = 10
@@ -333,9 +333,8 @@ function main(sqlError) {
     }
 
     function addPlayer(playerName) {
-      const name = `!${playerName}`;
-      if (!players[name]) {
-        players[name] = {
+      if (!players[playerName]) {
+        players[playerName] = {
           rating: initialrating,
           hidden: bonusrating,
           oldrating: initialrating,
@@ -367,7 +366,7 @@ function main(sqlError) {
     }
 
     function printCurrentScore(playerName, opponent) {
-      const player = players[`!${playerName}`];
+      const player = players[playerName];
       console.log(`${player.rating} ${opponent}`);
     }
 
