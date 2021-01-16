@@ -1,16 +1,16 @@
 "use strict";
 
-//The game id of the last game of the last update:
+// The game id of the last game of the last update:
 const lastgameid = 100191;
 
-//Rating calculation parameters:
+// Rating calculation parameters:
 const initialrating = 1000;
 const bonusrating = 550;
 const bonusfactor = 60;
 const participationlimit = 10;
 const participationcutoff = 1500;
 
-//File names:
+// File names:
 const databasepath = process.argv[2] || "games_anon.db";
 const resultfile = "ratings.csv";
 const resultfile_tournament = "tournament_ratings.csv";
@@ -37,7 +37,7 @@ const tournament_participants = new Set([
   "Ziji",
 ]);
 
-//Statistics parameters, does not affect rating calculation:
+// Statistics parameters, does not affect rating calculation:
 const goodlimit = 1600;
 const whiteadvantage = 100;
 const showratingprogression = false;
@@ -48,7 +48,7 @@ const fs = require("fs");
 const db = new sqlite3.Database(databasepath, sqlite3.OPEN_READONLY, main);
 
 function main(error) {
-  //db.all("SELECT name FROM sqlite_master WHERE type='table';",tables)
+  // db.all("SELECT name FROM sqlite_master WHERE type='table';",tables)
   db.all("SELECT * FROM games ORDER BY date ASC, id ASC;", datacb);
   function datacb(error, data) {
     const players = {};
@@ -127,7 +127,7 @@ function main(error) {
       const cheatsurrender = (data[a].result == "1-0" && blankexcepted.has(data[a].player_black)) || (data[a].result == "0-1" && blankexcepted.has(data[a].player_white));
       cheatcount += cheatsurrender;
       if (cheatsurrender) {
-        //console.log(data[a].player_black+" "+data[a].player_white+" "+data[a].notation)
+        // console.log(data[a].player_black+" "+data[a].player_white+" "+data[a].notation)
       }
       if (includeplayer(data[a].player_white) && includeplayer(data[a].player_black) && data[a].size >= 5 && (data[a].notation != "" || cheatsurrender) && data[a].result != "0-0") {// && isbot(data[a].player_white)+isbot(data[a].player_black)!=3){
         if (data[a].date % 86400000 < lasttime % 86400000) {
@@ -139,15 +139,15 @@ function main(error) {
         let hiccup = false;
         if (data[a].date - lasttime < 1000 && data[a].player_white === data[a - 1].player_white) {
           hiccup = true;
-          //console.log("Hiccup2 "+data[a].result+" "+data[a].date)
+          // console.log("Hiccup2 "+data[a].result+" "+data[a].date)
         }
         if (a + 1 !== data.length && data[a + 1].date - data[a].date < 1000 && data[a + 1].player_white === data[a].player_white) {
           if (data[a + 1].result.indexOf("0") !== data[a].result.indexOf("0")) {
             hiccup = true;
-            //console.log("Hiccup1 "+data[a].result+" "+data[a].date)
+            // console.log("Hiccup1 "+data[a].result+" "+data[a].date)
           }
           else {
-            //console.log("Nohiccup1 "+data[a].result+" "+data[a].date)
+            // console.log("Nohiccup1 "+data[a].result+" "+data[a].date)
           }
         }
         firsttime = Math.min(firsttime, data[a].date);
@@ -190,7 +190,7 @@ function main(error) {
       }
     }
     console.log(data[data.length - 1]);
-    //console.log(players.TreffnonX)
+    // console.log(players.TreffnonX)
     delete players["!TreffnonX"];
 
     for (const name in players) {
@@ -296,12 +296,12 @@ function main(error) {
         /*if(name=="IntuitionBot"){
           players["!"+name].hidden=0
           players["!"+name].rating=1700
-        }*/
+        } */
       }
     }
 
     function includeplayer(name) {
-      return name !== "Anon" && name !== "FriendlyBot" && name !== "cutak_bot" && name !== "antakonistbot" && !/^Guest[0-9]+$/.test(name); //&& isbot(name)!==1
+      return name !== "Anon" && name !== "FriendlyBot" && name !== "cutak_bot" && name !== "antakonistbot" && !/^Guest[0-9]+$/.test(name); // && isbot(name)!==1
     }
 
     function isbot(name) {
