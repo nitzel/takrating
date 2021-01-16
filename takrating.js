@@ -1,4 +1,7 @@
+/* eslint-disable no-param-reassign */
 /* eslint-disable no-console */
+/* eslint-disable no-mixed-operators */
+/* eslint-disable no-use-before-define */
 
 // The game id of the last game of the last update:
 const lastgameid = 100191;
@@ -48,7 +51,8 @@ const fs = require("fs");
 
 const db = new sqlite3.Database(databasepath, sqlite3.OPEN_READONLY, main);
 
-function main(__error) {
+// eslint-disable-next-line no-unused-vars
+function main(sqlError) {
   // db.all("SELECT name FROM sqlite_master WHERE type='table';",tables)
   db.all("SELECT * FROM games ORDER BY date ASC, id ASC;", datacb);
   function datacb(error, data) {
@@ -67,6 +71,17 @@ function main(__error) {
     let whiteexpected = 0;
     const ratingsum = [];
     const ratingcount = [];
+
+    const scoreMapping = new Map([
+      ["1-0", 1],
+      ["R-0", 1],
+      ["F-0", 1],
+      ["1/2-1/2", 0.5],
+      ["0-1", 0],
+      ["0-R", 0],
+      ["0-F", 0],
+    ]);
+
     const botNames = new Set([
       "TakticianBot",
       "alphatak_bot",
@@ -123,16 +138,20 @@ function main(__error) {
     for (let i = 0; i < data.length; i += 1) {
       data[i].player_black = nametranslate.get(data[i].player_black) || data[i].player_black;
       data[i].player_white = nametranslate.get(data[i].player_white) || data[i].player_white;
-      const cheatsurrender = (data[i].result === "1-0" && blankexcepted.has(data[i].player_black)) || (data[i].result === "0-1" && blankexcepted.has(data[i].player_white));
-      cheatcount += cheatsurrender;
+      const cheatsurrender = (data[i].result === "1-0" && blankexcepted.has(data[i].player_black))
+                          || (data[i].result === "0-1" && blankexcepted.has(data[i].player_white));
+      cheatcount += cheatsurrender ? 1 : 0;
       if (cheatsurrender) {
         // console.log(data[a].player_black+" "+data[a].player_white+" "+data[a].notation)
       }
-      if (includeplayer(data[i].player_white) && includeplayer(data[i].player_black) && data[i].size >= 5 && (data[i].notation !== "" || cheatsurrender) && data[i].result !== "0-0") {// && isbot(data[a].player_white)+isbot(data[a].player_black)!=3){
+      if (includePlayer(data[i].player_white)
+        && includePlayer(data[i].player_black)
+        && data[i].size >= 5 && (data[i].notation !== "" || cheatsurrender)
+        && data[i].result !== "0-0") { // && isbot(data[a].player_white)+isbot(data[a].player_black)!=3){
         if (data[i].date % 86400000 < lasttime % 86400000) {
-          for (const player in players) {
-            players[player].participation = Math.min(players[player].participation * .995, 20);
-          }
+          Object.values(players).forEach((player) => {
+            player.participation = Math.min(player.participation * 0.995, 20);
+          });
           console.log("day");
         }
         let hiccup = false;
@@ -144,8 +163,7 @@ function main(__error) {
           if (data[i + 1].result.indexOf("0") !== data[i].result.indexOf("0")) {
             hiccup = true;
             // console.log("Hiccup1 "+data[a].result+" "+data[a].date)
-          }
-          else {
+          } else {
             // console.log("Nohiccup1 "+data[a].result+" "+data[a].date)
           }
         }
@@ -154,17 +172,17 @@ function main(__error) {
         lastid = data[i].id;
         if (!hiccup && data[i].player_white !== data[i].player_black) {
           games += 1;
-          addplayer(data[i].player_white);
-          addplayer(data[i].player_black);
-          const result = { "1-0": 1, "R-0": 1, "F-0": 1, "1/2-1/2": 0.5, "0-1": 0, "0-R": 0, "0-F": 0 }[data[i].result];
+          addPlayer(data[i].player_white);
+          addPlayer(data[i].player_black);
+          const result = scoreMapping.get(data[i].result);
           const sw = strength(data[i].player_white); // * 10**(0/400); - What is that for?
           const sb = strength(data[i].player_black);
           const expected = sw / (sw + sb);
           const fairness = expected * (1 - expected);
           if (sw > 10 ** (goodlimit / 400)
             && sb > 10 ** (goodlimit / 400)
-            && !isbot(data[i].player_white)
-            && !isbot(data[i].player_black)
+            && !isBot(data[i].player_white)
+            && !isBot(data[i].player_black)
             && data[i].size === 5) {
             flatcount += (data[i].result === "F-0" || data[i].result === "0-F");
             roadcount += (data[i].result === "R-0" || data[i].result === "0-R");
@@ -173,22 +191,20 @@ function main(__error) {
             goodcount += 1;
             whitecount += (result === 1);
             blackcount += (result === 0);
-            whiteexpected += sw * Math.pow(10, whiteadvantage / 400) / (sw * Math.pow(10, whiteadvantage / 400) + sb);
+            whiteexpected += sw * (10 ** (whiteadvantage / 400)) / (sw * (10 ** (whiteadvantage / 400)) + sb);
           }
-          adjustplayer(data[i].player_white, result - expected, fairness);
-          adjustplayer(data[i].player_black, expected - result, fairness);
+          adjustPlayer(data[i].player_white, result - expected, fairness);
+          adjustPlayer(data[i].player_black, expected - result, fairness);
           if (data[i].player_white === playerhistory) {
-            printcurrentscore(data[i].player_white, data[i].player_black);
+            printCurrentScore(data[i].player_white, data[i].player_black);
           }
           if (data[i].player_black === playerhistory) {
-            printcurrentscore(data[i].player_black, data[i].player_white);
+            printCurrentScore(data[i].player_black, data[i].player_white);
           }
         }
         if (data[i].id === lastgameid) {
-          updatedisplayrating();
-          for (const name in players) {
-            players[name].oldrating = players[name].displayrating;
-          }
+          updateDisplayRating();
+          Object.values(players).forEach((player) => { player.oldrating = player.displayrating; });
         }
       }
     }
@@ -198,8 +214,8 @@ function main(__error) {
 
     const playerlist = Object.values(players);
 
-    updatedisplayrating();
-    playerlist.sort(function (a, b) { return b.displayrating - a.displayrating; });
+    updateDisplayRating();
+    playerlist.sort((a, b) => b.displayrating - a.displayrating);
     let out = "";
     let outTournament = "";
     let ratingsumt = 0;
@@ -211,7 +227,7 @@ function main(__error) {
       if (/bot/i.test(player.name)) {
         console.log(`Bot: ${player.name}`);
       }
-      const playerIsBot = isbot(player.name);
+      const playerIsBot = isBot(player.name);
       const listname = playerIsBot ? `*${player.name}*` : player.name;
       const line = `${[
         (i + 1),
@@ -265,7 +281,7 @@ function main(__error) {
       return 10 ** (players[`!${name}`].rating / 400);
     }
 
-    function adjustplayer(playerName, amount, fairness) {
+    function adjustPlayer(playerName, amount, fairness) {
       const player = players[`!${playerName}`];
       const bonus = Math.max(0, amount * player.hidden * bonusfactor / bonusrating);
       player.hidden -= bonus;
@@ -282,7 +298,7 @@ function main(__error) {
       player.maxrating = Math.max(player.maxrating, player.rating);
     }
 
-    function addplayer(playerName) {
+    function addPlayer(playerName) {
       const name = `!${playerName}`;
       if (!players[name]) {
         players[name] = {
@@ -304,30 +320,30 @@ function main(__error) {
       }
     }
 
-    function includeplayer(name) {
-      return name !== "Anon" && name !== "FriendlyBot" && name !== "cutak_bot" && name !== "antakonistbot" && !/^Guest[0-9]+$/.test(name); // && isbot(name)!==1
+    function includePlayer(name) {
+      return name !== "Anon"
+        && name !== "FriendlyBot"
+        && name !== "cutak_bot"
+        && name !== "antakonistbot"
+        && !/^Guest[0-9]+$/.test(name); // && isbot(name)!==1
     }
 
-    function isbot(name) {
+    function isBot(name) {
       return botNames.has(name);
     }
 
-    function printcurrentscore(playerName, opponent) {
+    function printCurrentScore(playerName, opponent) {
       const player = players[`!${playerName}`];
       console.log(`${player.rating} ${opponent}`);
     }
 
-    function updatedisplayrating() {
-      for (const player in players) {
-        players[player].displayrating = players[player].rating;
-        if (players[player].participation < participationlimit && players[player].rating > participationcutoff) {
-          players[player].displayrating = participationcutoff + (players[player].rating - participationcutoff) * players[player].participation / participationlimit;
+    function updateDisplayRating() {
+      Object.values(players).forEach((player) => {
+        player.displayrating = player.rating;
+        if (player.participation < participationlimit && player.rating > participationcutoff) {
+          player.displayrating = participationcutoff + ((player.rating - participationcutoff) * player.participation) / participationlimit;
         }
-      }
+      });
     }
   }
-}
-
-function sign(number) {
-  return (number > 0 ? "+" : "") + number;
 }
