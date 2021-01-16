@@ -9,7 +9,7 @@ In a console, navigate to that directory, and run the command `npm install`, in 
 
 Download a game database from [Playtak](https://www.playtak.com/games), and place it in the same directory.
 
-Run `node takrating.js` in order to generate the ranking list.
+Run `node takrating.js [path_to_database]` in order to generate the ranking list.
 
 Look at and/or modify the source code and settings in `takrating.js`.
 
