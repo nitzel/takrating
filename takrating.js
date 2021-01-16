@@ -17,6 +17,7 @@ const participationcutoff = 1500;
 const databasepath = process.argv[2] || "games_anon.db";
 const resultfile = "ratings.csv";
 const resultfileTournament = "tournament_ratings.csv";
+const resultsJsonFile = "rating.json";
 
 // Tournament
 const tournamentParticipants = new Set([
@@ -246,6 +247,39 @@ function main(sqlError) {
     }
     fs.writeFileSync(resultfile, out);
     fs.writeFileSync(resultfileTournament, outTournament);
+    const statistics = {
+      games,
+      accounts: playerlist.length,
+      timespan: {
+        from: firsttime,
+        to: lasttime,
+      },
+      lastGameId: lastid,
+      goodPlayerStatistics: {
+        minimumRating: goodlimit,
+        games: goodcount,
+        endings: {
+          flat: flatcount,
+          road: roadcount,
+          draw: drawcount,
+          other: othercount,
+          white: whitecount,
+          black: blackcount,
+        },
+        whiteScore: {
+          expected: whiteexpected / goodcount,
+          actual: whitecount / goodcount + drawcount / goodcount / 2,
+        },
+        ratings: {
+          average: ratingsumt / playerlist.length,
+          averageBonusLeft: hiddensum / players.length,
+        },
+        cheatCount: cheatcount,
+      },
+      playerStatistics: players,
+    };
+    fs.writeFileSync(resultsJsonFile, JSON.stringify(statistics));
+
     console.log(`Games: ${games}`);
     console.log(`Accounts: ${playerlist.length}`);
     console.log("Timespan:");
