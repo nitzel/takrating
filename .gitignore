@@ -1,3 +1,5 @@
 *.db
+*.log
+*.csv
 node_modules/
 *ratings.txt
