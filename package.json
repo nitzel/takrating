@@ -2,6 +2,6 @@
 	"name": "takrating",
 	"version": "1.0.0",
 	"dependencies": {
-		"sqlite3": "~3"
+		"sqlite3": "~5"
 	}
 }
