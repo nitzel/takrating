@@ -54,8 +54,6 @@ function main(error) {
     const players = {}
     const playerlist = []
     let a
-    let name
-    let player
     let games = 0
     let firsttime = 1e20
     let lasttime = 0
@@ -70,55 +68,70 @@ function main(error) {
     let whiteexpected = 0
     const ratingsum = []
     const ratingcount = []
-    const nametranslate = {
-      "alphabot": "alphatak_bot alphabot"
-      , "alphatak_bot": "alphatak_bot alphabot"
-      , "TakticianBot": "TakticianBot TakticianBotDev"
-      , "TakticianBotDev": "TakticianBot TakticianBotDev"
-      , "sectenor": "Turing sectenor"
-      , "Turing": "Turing sectenor"
-      , "SultanPepper": "SultanPepper KingSultan PrinceSultan SultanTheGreat FuhrerSultan MaerSultan"
-      , "KingSultan": "SultanPepper KingSultan PrinceSultan SultanTheGreat FuhrerSultan MaerSultan"
-      , "PrinceSultan": "SultanPepper KingSultan PrinceSultan SultanTheGreat FuhrerSultan MaerSultan"
-      , "SultanTheGreat": "SultanPepper KingSultan PrinceSultan SultanTheGreat FuhrerSultan MaerSultan"
-      , "FuhrerSultan": "SultanPepper KingSultan PrinceSultan SultanTheGreat FuhrerSultan MaerSultan"
-      , "MaerSultan": "SultanPepper KingSultan PrinceSultan SultanTheGreat FuhrerSultan MaerSultan"
-      , "tarontos": "Tarontos tarontos"
-      , "Tarontos": "Tarontos tarontos"
-      , "Ally": "Ally Luffy"
-      , "Luffy": "Ally Luffy"
-      , "Archerion": "Archerion Archerion2"
-      , "Archerion2": "Archerion Archerion2"
-      , "Simmon": "Simmon Manet"
-      , "Manet": "Simmon Manet"
-      , "Alexc997": "Doodles Alexc997"
-      , "Doodles": "Doodles Alexc997"
-      , "dylandragon": "dylandragon DragonTakerDG"
-      , "DragonTakerDG": "dylandragon DragonTakerDG"
-      , "Abyss": "Abyss Bullet"
-      , "Bullet": "Abyss Bullet"
-      , "Syme": "Syme Saemon"
-      , "Saemon": "Syme Saemon"
-    }
-    const blankexcepted = {
-      "Simmon Manet": 1
-    }
+    const botNames = new Set([
+      "TakticianBot",
+      "alphatak_bot",
+      "alphabot",
+      "cutak_bot",
+      "TakticianBotDev",
+      "takkybot",
+      "ShlktBot",
+      "AlphaTakBot_5x5",
+      "BeginnerBot",
+      "alphatak_bot alphabot",
+      "TakticianBot TakticianBotDev",
+      "TakkerusBot",
+      "IntuitionBot",
+      "TakkenBot",
+    ]);
+
+    const nametranslate = new Map([
+      ["alphabot", "alphatak_bot alphabot"],
+      ["alphatak_bot", "alphatak_bot alphabot"],
+      ["TakticianBot", "TakticianBot TakticianBotDev"],
+      ["TakticianBotDev", "TakticianBot TakticianBotDev"],
+      ["sectenor", "Turing sectenor"],
+      ["Turing", "Turing sectenor"],
+      ["SultanPepper", "SultanPepper KingSultan PrinceSultan SultanTheGreat FuhrerSultan MaerSultan"],
+      ["KingSultan", "SultanPepper KingSultan PrinceSultan SultanTheGreat FuhrerSultan MaerSultan"],
+      ["PrinceSultan", "SultanPepper KingSultan PrinceSultan SultanTheGreat FuhrerSultan MaerSultan"],
+      ["SultanTheGreat", "SultanPepper KingSultan PrinceSultan SultanTheGreat FuhrerSultan MaerSultan"],
+      ["FuhrerSultan", "SultanPepper KingSultan PrinceSultan SultanTheGreat FuhrerSultan MaerSultan"],
+      ["MaerSultan", "SultanPepper KingSultan PrinceSultan SultanTheGreat FuhrerSultan MaerSultan"],
+      ["tarontos", "Tarontos tarontos"],
+      ["Tarontos", "Tarontos tarontos"],
+      ["Ally", "Ally Luffy"],
+      ["Luffy", "Ally Luffy"],
+      ["Archerion", "Archerion Archerion2"],
+      ["Archerion2", "Archerion Archerion2"],
+      ["Simmon", "Simmon Manet"],
+      ["Manet", "Simmon Manet"],
+      ["Alexc997", "Doodles Alexc997"],
+      ["Doodles", "Doodles Alexc997"],
+      ["dylandragon", "dylandragon DragonTakerDG"],
+      ["DragonTakerDG", "dylandragon DragonTakerDG"],
+      ["Abyss", "Abyss Bullet"],
+      ["Bullet", "Abyss Bullet"],
+      ["Syme", "Syme Saemon"],
+      ["Saemon", "Syme Saemon"],
+    ]);
+    const blankexcepted = new Set(["Simmon Manet"]);
     for (a = 0; a < 200; a++) {
       ratingsum[a] = 0
       ratingcount[a] = 0
     }
     let cheatcount = 0
     for (a = 0; a < data.length; a++) {
-      data[a].player_black = nametranslate[data[a].player_black] || data[a].player_black
-      data[a].player_white = nametranslate[data[a].player_white] || data[a].player_white
-      const cheatsurrender = (data[a].result == "1-0" && blankexcepted.hasOwnProperty(data[a].player_black)) || (data[a].result == "0-1" && blankexcepted.hasOwnProperty(data[a].player_white))
+      data[a].player_black = nametranslate.get(data[a].player_black) || data[a].player_black;
+      data[a].player_white = nametranslate.get(data[a].player_white) || data[a].player_white;
+      const cheatsurrender = (data[a].result == "1-0" && blankexcepted.has(data[a].player_black)) || (data[a].result == "0-1" && blankexcepted.has(data[a].player_white))
       cheatcount += cheatsurrender
       if (cheatsurrender) {
         //console.log(data[a].player_black+" "+data[a].player_white+" "+data[a].notation)
       }
       if (includeplayer(data[a].player_white) && includeplayer(data[a].player_black) && data[a].size >= 5 && (data[a].notation != "" || cheatsurrender) && data[a].result != "0-0") {// && isbot(data[a].player_white)+isbot(data[a].player_black)!=3){
         if (data[a].date % 86400000 < lasttime % 86400000) {
-          for (player in players) {
+          for (const player in players) {
             players[player].participation = Math.min(players[player].participation * .995, 20)
           }
           console.log("day")
@@ -170,7 +183,7 @@ function main(error) {
         }
         if (data[a].id === lastgameid) {
           updatedisplayrating()
-          for (name in players) {
+          for (const name in players) {
             players[name].oldrating = players[name].displayrating
           }
         }
@@ -180,7 +193,7 @@ function main(error) {
     //console.log(players.TreffnonX)
     delete players["!TreffnonX"]
 
-    for (name in players) {
+    for (const name in players) {
       playerlist.push(players[name])
     }
     updatedisplayrating()
@@ -198,7 +211,15 @@ function main(error) {
       }
       const playerIsBot = isbot(player.name)
       const listname = playerIsBot ? `*${player.name}*` : player.name;
-      const line = [(a + 1), listname, playerIsBot, player.rating, player.displayrating, player.rating.oldrating, player.games].join(",") + "\n";
+      const line = [
+        (a + 1),
+        listname,
+        playerIsBot,
+        Math.floor(player.rating),
+        Math.floor(player.displayrating),
+        Math.floor(player.oldrating),
+        Math.floor(player.games),
+      ].join(",") + "\n";
       // const line = (a + 1) + "\\. | " + listname + " | " + (player.displayrating === player.rating ? "" : "\\*") + Math.floor(player.displayrating) + " | " + sign(Math.floor(player.displayrating) - Math.floor(player.oldrating)) + " | " + player.games + "\r\n"
       out += line;
       if (tournament_participants.has(player.name)) {
@@ -237,9 +258,11 @@ function main(error) {
         console.log((a + 1) + ": " + virtrating)
       }
     }
+  
     function strength(name) {
       return Math.pow(10, players["!" + name].rating / 400)
     }
+  
     function adjustplayer(playerName, amount, fairness) {
       const name = "!" + playerName;
       const bonus = Math.max(0, amount * players[name].hidden * bonusfactor / bonusrating)
@@ -254,9 +277,22 @@ function main(error) {
       players[name].games++
       players[name].maxrating = Math.max(players[name].maxrating, players[name].rating)
     }
-    function addplayer(name) {
-      if (!players["!" + name]) {
-        players["!" + name] = { rating: initialrating, hidden: bonusrating, oldrating: initialrating, name: name, games: 0, maxrating: initialrating, participation: participationlimit, displayrating: initialrating }
+
+    function addplayer(playerName) {
+      const name = "!" + playerName;
+      if (!players[name]) {
+        players[name] = { 
+          rating: initialrating,
+          hidden: bonusrating,
+          oldrating: initialrating,
+          name: playerName,
+          games: 0,
+          maxrating:
+          initialrating,
+          participation:
+          participationlimit,
+          displayrating: initialrating
+        };
         /*if(name=="IntuitionBot"){
           players["!"+name].hidden=0
           players["!"+name].rating=1700
@@ -269,7 +305,7 @@ function main(error) {
     }
 
     function isbot(name) {
-      return { "TakticianBot": 1, "alphatak_bot": 1, "alphabot": 1, "cutak_bot": 1, "TakticianBotDev": 1, "takkybot": 1, "ShlktBot": 1, "AlphaTakBot_5x5": 1, "BeginnerBot": 1, "alphatak_bot alphabot": 1, "TakticianBot TakticianBotDev": 1, "TakkerusBot": 1, "IntuitionBot": 1, "TakkenBot":1}[name] || 0;
+      return botNames.has(name);
     }
 
     function printcurrentscore(pl, opponent) {
@@ -277,7 +313,7 @@ function main(error) {
     }
 
     function updatedisplayrating() {
-      for (player in players) {
+      for (const player in players) {
         players[player].displayrating = players[player].rating
         if (players[player].participation < participationlimit && players[player].rating > participationcutoff) {
           players[player].displayrating = participationcutoff + (players[player].rating - participationcutoff) * players[player].participation / participationlimit
