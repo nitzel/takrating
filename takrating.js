@@ -13,10 +13,10 @@ const participationcutoff = 1500;
 // File names:
 const databasepath = process.argv[2] || "games_anon.db";
 const resultfile = "ratings.csv";
-const resultfile_tournament = "tournament_ratings.csv";
+const resultfileTournament = "tournament_ratings.csv";
 
 // Tournament
-const tournament_participants = new Set([
+const tournamentParticipants = new Set([
   "alpacascreed",
   "christopher", // not in db
   "dFruh",
@@ -45,6 +45,7 @@ const playerhistory = "IntuitionBot";
 
 const sqlite3 = require("sqlite3");
 const fs = require("fs");
+
 const db = new sqlite3.Database(databasepath, sqlite3.OPEN_READONLY, main);
 
 function main(error) {
@@ -121,15 +122,15 @@ function main(error) {
       ratingcount[a] = 0;
     }
     let cheatcount = 0;
-    for (a = 0; a < data.length; a++) {
+    for (a = 0; a < data.length; a += 1) {
       data[a].player_black = nametranslate.get(data[a].player_black) || data[a].player_black;
       data[a].player_white = nametranslate.get(data[a].player_white) || data[a].player_white;
-      const cheatsurrender = (data[a].result == "1-0" && blankexcepted.has(data[a].player_black)) || (data[a].result == "0-1" && blankexcepted.has(data[a].player_white));
+      const cheatsurrender = (data[a].result === "1-0" && blankexcepted.has(data[a].player_black)) || (data[a].result === "0-1" && blankexcepted.has(data[a].player_white));
       cheatcount += cheatsurrender;
       if (cheatsurrender) {
         // console.log(data[a].player_black+" "+data[a].player_white+" "+data[a].notation)
       }
-      if (includeplayer(data[a].player_white) && includeplayer(data[a].player_black) && data[a].size >= 5 && (data[a].notation != "" || cheatsurrender) && data[a].result != "0-0") {// && isbot(data[a].player_white)+isbot(data[a].player_black)!=3){
+      if (includeplayer(data[a].player_white) && includeplayer(data[a].player_black) && data[a].size >= 5 && (data[a].notation !== "" || cheatsurrender) && data[a].result !== "0-0") {// && isbot(data[a].player_white)+isbot(data[a].player_black)!=3){
         if (data[a].date % 86400000 < lasttime % 86400000) {
           for (const player in players) {
             players[player].participation = Math.min(players[player].participation * .995, 20);
@@ -163,13 +164,13 @@ function main(error) {
           const expected = sw / (sw + sb);
           const fairness = expected * (1 - expected);
           if (sw > Math.pow(10, goodlimit / 400) && sb > Math.pow(10, goodlimit / 400) && !isbot(data[a].player_white) && !isbot(data[a].player_black) && data[a].size === 5) {
-            flatcount += (data[a].result == "F-0" || data[a].result == "0-F");
-            roadcount += (data[a].result == "R-0" || data[a].result == "0-R");
-            drawcount += (data[a].result == "1/2-1/2");
-            othercount += (data[a].result == "1-0" || data[a].result == "0-1");
+            flatcount += (data[a].result === "F-0" || data[a].result === "0-F");
+            roadcount += (data[a].result === "R-0" || data[a].result === "0-R");
+            drawcount += (data[a].result === "1/2-1/2");
+            othercount += (data[a].result === "1-0" || data[a].result === "0-1");
             goodcount++;
-            whitecount += (result == 1);
-            blackcount += (result == 0);
+            whitecount += (result === 1);
+            blackcount += (result === 0);
             whiteexpected += sw * Math.pow(10, whiteadvantage / 400) / (sw * Math.pow(10, whiteadvantage / 400) + sb);
           }
           adjustplayer(data[a].player_white, result - expected, fairness);
@@ -222,12 +223,12 @@ function main(error) {
       ].join(",") + "\n";
       // const line = (a + 1) + "\\. | " + listname + " | " + (player.displayrating === player.rating ? "" : "\\*") + Math.floor(player.displayrating) + " | " + sign(Math.floor(player.displayrating) - Math.floor(player.oldrating)) + " | " + player.games + "\r\n"
       out += line;
-      if (tournament_participants.has(player.name)) {
+      if (tournamentParticipants.has(player.name)) {
         out_tournament += line;
       }
     }
     fs.writeFileSync(resultfile, out);
-    fs.writeFileSync(resultfile_tournament, out_tournament);
+    fs.writeFileSync(resultfileTournament, out_tournament);
     console.log("Games: " + games);
     console.log("Accounts: " + playerlist.length);
     console.log("Timespan:");
@@ -258,11 +259,11 @@ function main(error) {
         console.log((a + 1) + ": " + virtrating);
       }
     }
-  
+
     function strength(name) {
       return Math.pow(10, players["!" + name].rating / 400);
     }
-  
+
     function adjustplayer(playerName, amount, fairness) {
       const name = "!" + playerName;
       const bonus = Math.max(0, amount * players[name].hidden * bonusfactor / bonusrating);
@@ -281,7 +282,7 @@ function main(error) {
     function addplayer(playerName) {
       const name = "!" + playerName;
       if (!players[name]) {
-        players[name] = { 
+        players[name] = {
           rating: initialrating,
           hidden: bonusrating,
           oldrating: initialrating,
@@ -291,9 +292,9 @@ function main(error) {
           initialrating,
           participation:
           participationlimit,
-          displayrating: initialrating
+          displayrating: initialrating,
         };
-        /*if(name=="IntuitionBot"){
+        /* if(name==="IntuitionBot"){
           players["!"+name].hidden=0
           players["!"+name].rating=1700
         } */
