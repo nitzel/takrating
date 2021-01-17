@@ -256,13 +256,12 @@ function main(sqlError) {
     fs.writeFileSync(resultfileTournament, outTournament);
 
     // Reduce amount of data stored in .json file
-    players.forEach((player) => {
+    playerlist.forEach((player) => {
       player.rating = Math.floor(player.rating);
       player.hidden = Math.floor(player.hidden);
       player.oldrating = Math.floor(player.oldrating);
       player.maxrating = Math.floor(player.maxrating);
       player.displayrating = Math.floor(player.displayrating);
-      delete player.name;
     });
     const statistics = {
       games,
@@ -293,7 +292,7 @@ function main(sqlError) {
         },
         cheatCount: cheatcount,
       },
-      playerStatistics: [...players.entries()],
+      players: playerlist,
     };
     fs.writeFileSync(resultsJsonFile, JSON.stringify(statistics));
 
