@@ -14,7 +14,8 @@ const participationlimit = 10;
 const participationcutoff = 1500;
 
 // File names:
-const databasepath = process.argv[2] || "games_anon.db";
+const argDatabasePath = process.argv[2];
+const databasepath = argDatabasePath || "games_anon.db";
 const resultfile = "ratings.csv";
 const resultfileTournament = "tournament_ratings.csv";
 const resultsJsonFile = "rating.json";
@@ -54,6 +55,14 @@ const db = new sqlite3.Database(databasepath, sqlite3.OPEN_READONLY, main);
 
 // eslint-disable-next-line no-unused-vars
 function main(sqlError) {
+  if (sqlError) {
+    console.error(`Error while loading database from ${databasepath}:`, sqlError);
+    if (!argDatabasePath) {
+      console.log("Consider specifying the path to the database");
+    }
+    return;
+  }
+
   // db.all("SELECT name FROM sqlite_master WHERE type='table';",tables)
   db.all("SELECT * FROM games ORDER BY date ASC, id ASC;", datacb);
   function datacb(error, data) {
