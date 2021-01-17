@@ -1,0 +1,34 @@
+.hidden {
+  visibility: hidden;
+}
+
+.name {
+  color: inherit;
+}
+.name .main {
+  color: inherit;
+}
+.name .alternatives {
+  color: blue;
+  font-size: xx-small;
+  vertical-align: top;
+}
+
+.development.up {
+  color: darkgreen;
+}
+
+.development.down {
+  color: darkred;
+}
+
+table tr .name,
+table tr .id {
+  text-align: left;
+}
+
+table tr .rating,
+table tr .development,
+table tr .games {
+  text-align: right;
+}
