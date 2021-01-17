@@ -247,6 +247,16 @@ function main(sqlError) {
     }
     fs.writeFileSync(resultfile, out);
     fs.writeFileSync(resultfileTournament, outTournament);
+
+    // Reduce amount of data stored in .json file
+    Object.values(players).forEach((player) => {
+      player.rating = Math.floor(player.rating);
+      player.hidden = Math.floor(player.hidden);
+      player.oldrating = Math.floor(player.oldrating);
+      player.maxrating = Math.floor(player.maxrating);
+      player.displayrating = Math.floor(player.displayrating);
+      delete player.name;
+    });
     const statistics = {
       games,
       accounts: playerlist.length,
@@ -340,10 +350,8 @@ function main(sqlError) {
           oldrating: initialrating,
           name: playerName,
           games: 0,
-          maxrating:
-          initialrating,
-          participation:
-          participationlimit,
+          maxrating: initialrating,
+          participation: participationlimit,
           displayrating: initialrating,
         };
         /* if(name==="IntuitionBot"){
