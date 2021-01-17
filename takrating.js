@@ -57,7 +57,7 @@ function main(sqlError) {
   // db.all("SELECT name FROM sqlite_master WHERE type='table';",tables)
   db.all("SELECT * FROM games ORDER BY date ASC, id ASC;", datacb);
   function datacb(error, data) {
-    const players = {};
+    const players = new Map();
     let games = 0;
     let firsttime = 1e20;
     let lasttime = 0;
@@ -140,7 +140,7 @@ function main(sqlError) {
       data[i].player_black = nametranslate.get(data[i].player_black) || data[i].player_black;
       data[i].player_white = nametranslate.get(data[i].player_white) || data[i].player_white;
       const cheatsurrender = (data[i].result === "1-0" && blankexcepted.has(data[i].player_black))
-                          || (data[i].result === "0-1" && blankexcepted.has(data[i].player_white));
+        || (data[i].result === "0-1" && blankexcepted.has(data[i].player_white));
       cheatcount += cheatsurrender ? 1 : 0;
       if (cheatsurrender) {
         // console.log(data[a].player_black+" "+data[a].player_white+" "+data[a].notation)
@@ -150,7 +150,7 @@ function main(sqlError) {
         && data[i].size >= 5 && (data[i].notation !== "" || cheatsurrender)
         && data[i].result !== "0-0") { // && isbot(data[a].player_white)+isbot(data[a].player_black)!=3){
         if (data[i].date % 86400000 < lasttime % 86400000) {
-          Object.values(players).forEach((player) => {
+          players.forEach((player) => {
             player.participation = Math.min(player.participation * 0.995, 20);
           });
           console.log("day");
@@ -205,15 +205,15 @@ function main(sqlError) {
         }
         if (data[i].id === lastgameid) {
           updateDisplayRating();
-          Object.values(players).forEach((player) => { player.oldrating = player.displayrating; });
+          players.forEach((player) => { player.oldrating = player.displayrating; });
         }
       }
     }
     console.log(data[data.length - 1]);
     // console.log(players.TreffnonX)
-    delete players.TreffnonX;
+    players.delete("TreffnonX");
 
-    const playerlist = Object.values(players);
+    const playerlist = [...players.values()];
 
     updateDisplayRating();
     playerlist.sort((a, b) => b.displayrating - a.displayrating);
@@ -249,7 +249,7 @@ function main(sqlError) {
     fs.writeFileSync(resultfileTournament, outTournament);
 
     // Reduce amount of data stored in .json file
-    Object.values(players).forEach((player) => {
+    players.forEach((player) => {
       player.rating = Math.floor(player.rating);
       player.hidden = Math.floor(player.hidden);
       player.oldrating = Math.floor(player.oldrating);
@@ -282,11 +282,11 @@ function main(sqlError) {
         },
         ratings: {
           average: ratingsumt / playerlist.length,
-          averageBonusLeft: hiddensum / players.length,
+          averageBonusLeft: hiddensum / playerlist.length,
         },
         cheatCount: cheatcount,
       },
-      playerStatistics: players,
+      playerStatistics: [...players.entries()],
     };
     fs.writeFileSync(resultsJsonFile, JSON.stringify(statistics));
 
@@ -322,11 +322,11 @@ function main(sqlError) {
     }
 
     function strength(name) {
-      return 10 ** (players[name].rating / 400);
+      return 10 ** (players.get(name).rating / 400);
     }
 
     function adjustPlayer(playerName, amount, fairness) {
-      const player = players[playerName];
+      const player = players.get(playerName);
       const bonus = Math.max(0, amount * player.hidden * bonusfactor / bonusrating);
       player.hidden -= bonus;
       const k = 10
@@ -343,8 +343,8 @@ function main(sqlError) {
     }
 
     function addPlayer(playerName) {
-      if (!players[playerName]) {
-        players[playerName] = {
+      if (!players.has(playerName)) {
+        players.set(playerName, {
           rating: initialrating,
           hidden: bonusrating,
           oldrating: initialrating,
@@ -353,7 +353,7 @@ function main(sqlError) {
           maxrating: initialrating,
           participation: participationlimit,
           displayrating: initialrating,
-        };
+        });
         /* if(name==="IntuitionBot"){
           players["!"+name].hidden=0
           players["!"+name].rating=1700
@@ -374,12 +374,12 @@ function main(sqlError) {
     }
 
     function printCurrentScore(playerName, opponent) {
-      const player = players[playerName];
+      const player = players.get(playerName);
       console.log(`${player.rating} ${opponent}`);
     }
 
     function updateDisplayRating() {
-      Object.values(players).forEach((player) => {
+      players.forEach((player) => {
         player.displayrating = player.rating;
         if (player.participation < participationlimit && player.rating > participationcutoff) {
           player.displayrating = participationcutoff + ((player.rating - participationcutoff) * player.participation) / participationlimit;
