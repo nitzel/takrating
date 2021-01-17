@@ -194,13 +194,11 @@ function main(sqlError) {
             blackcount += (result === 0);
             whiteexpected += sw * (10 ** (whiteadvantage / 400)) / (sw * (10 ** (whiteadvantage / 400)) + sb);
           }
-          adjustPlayer(data[i].player_white, result - expected, fairness);
-          adjustPlayer(data[i].player_black, expected - result, fairness);
-          if (data[i].player_white === playerhistory) {
-            printCurrentScore(data[i].player_white, data[i].player_black);
-          }
-          if (data[i].player_black === playerhistory) {
-            printCurrentScore(data[i].player_black, data[i].player_white);
+          const whiteDelta = adjustPlayer(data[i].player_white, result - expected, fairness);
+          const blackDelta = adjustPlayer(data[i].player_black, expected - result, fairness);
+
+          if (data[i].player_white === playerhistory || data[i].player_black === playerhistory) {
+            printGameScoreChange(data[i].player_white, data[i].player_black, whiteDelta, blackDelta);
           }
         }
         if (data[i].id === lastgameid) {
@@ -209,7 +207,7 @@ function main(sqlError) {
         }
       }
     }
-    console.log(data[data.length - 1]);
+    console.log("Last game in the database:", data[data.length - 1]);
     // console.log(players.TreffnonX)
     players.delete("TreffnonX");
 
@@ -332,14 +330,17 @@ function main(sqlError) {
       const k = 10
         + 15 * (0.5 ** (player.games / 200))
         + 15 * (0.5 ** ((player.maxrating - 1000) / 300));
-      player.rating += amount * k + bonus;
+      const delta = amount * k + bonus;
+      player.rating += delta;
       if (player.games < 200) {
         ratingcount[player.games] += 1;
-        ratingsum[player.games] += amount * k + bonus;
+        ratingsum[player.games] += delta;
       }
       player.participation += fairness;
       player.games += 1;
       player.maxrating = Math.max(player.maxrating, player.rating);
+
+      return delta;
     }
 
     function addPlayer(playerName) {
@@ -373,9 +374,12 @@ function main(sqlError) {
       return botNames.has(name);
     }
 
-    function printCurrentScore(playerName, opponent) {
-      const player = players.get(playerName);
-      console.log(`${player.rating} ${opponent}`);
+    function printGameScoreChange(whiteName, blackName, whiteDelta, blackDelta) {
+      const white = players.get(whiteName);
+      const black = players.get(blackName);
+      console.log(`${white.name}(${round(white.rating)}${signDelta(whiteDelta)})`
+        + " vs "
+        + `${black.name}(${round(black.rating)}${signDelta(blackDelta)})`);
     }
 
     function updateDisplayRating() {
@@ -387,4 +391,15 @@ function main(sqlError) {
       });
     }
   }
+}
+
+function round(number) {
+  return Math.round(number);
+}
+
+function signDelta(delta) {
+  const rounded = Math.round(delta);
+  if (delta >= 0) return `+${rounded}`;
+  if (rounded === 0) return `-${rounded}`;
+  return `${rounded}`;
 }
