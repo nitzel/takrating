@@ -12,14 +12,15 @@
   color: blue;
   font-size: xx-small;
   vertical-align: top;
+  font-style: italic;
 }
 
 .development.up {
-  color: darkgreen;
+  color: limegreen;
 }
 
 .development.down {
-  color: darkred;
+  color: red;
 }
 
 table tr .name,

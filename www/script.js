@@ -42,7 +42,7 @@ function createPlayerRow(template, rank, player) {
 
 function updateStatistics(newStatistics) {
   statistics = newStatistics;
-  players = statistics.players;
+  players = statistics.players; // .slice(0, 1000);
 
   const template = getElement("template#player-row");
   const tbody = getElement("#rating tbody");
