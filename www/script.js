@@ -14,7 +14,6 @@ function getElements(selector) {
 }
 
 let statistics = {};
-let players = [];
 
 function createPlayerRow(template, rank, player) {
   const clone = template.content.cloneNode(true);
@@ -40,14 +39,20 @@ function createPlayerRow(template, rank, player) {
   return clone;
 }
 
-function updateStatistics(newStatistics) {
-  statistics = newStatistics;
-  players = statistics.players; // .slice(0, 1000);
-
+function updatePlayerTable(players) {
   const template = getElement("template#player-row");
   const tbody = getElement("#rating tbody");
   const playerRows = players.map((player, index) => createPlayerRow(template, index + 1, player));
+  tbody.innerHTML = "";
   playerRows.forEach((row) => tbody.appendChild(row));
+}
+
+function updateStatistics(newStatistics) {
+  statistics = newStatistics;
+
+  getElement("#lastGame").innerHTML = new Date(statistics.timespan.to).toISOString();
+
+  updatePlayerTable(statistics.players);
 }
 
 function onLoad() {
