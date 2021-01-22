@@ -13,7 +13,7 @@ const argLastGameId = parseInt(process.argv[3], 10);
 if (!argDatabasePath) {
   throw new Error("Database path not specified. npm run rating <path/db> <lastGameId>");
 }
-if (!argLastGameId) {
+if (!Number.isFinite(argLastGameId)) {
   throw new Error("Last game ID not specified. npm run rating <path/db> <lastGameId>");
 }
 
