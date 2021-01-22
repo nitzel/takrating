@@ -4,7 +4,7 @@ const express = require("express");
 const path = require("path");
 
 // const hostname = "0.0.0.0";
-const hostname = "localhost";
+const hostname = "0.0.0.0";
 const port = 8080;
 
 const absoluteRatingPath = path.join(__dirname, "./rating.json");
