@@ -7,7 +7,7 @@ curl "https://www.playtak.com/games_anon.db" --output $file_name
 rating_file="./rating.json"
 if test -f $rating_file; 
 then
-  last_game_id=cat $rating_file | jq ".lastGameId"
+  last_game_id=$(cat $rating_file | jq ".lastGameId")
 else
   last_game_id=0
 fi
