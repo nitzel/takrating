@@ -15,6 +15,8 @@
 - Web Server
   - `npm install pm2 --global` to keep the web server running
   - `pm2 start ./server.js`
+    - `pm2 save`
+    - Run `pm2 startup` and follow the output to make sure your service starts after a machine reboot
   - `ufw allow 8080` or whatever port you'd like to expose it through
     - If you chose a port that was not `8080` and haven't changed the `server.js` you need to forward the port `server.js` uses to the one you exposed, in this case, 80:
       ```
@@ -29,3 +31,4 @@
     # It might be the best to change your machine's timezone to UTC.
     10 5 * * * cd ~/takrating && ./update.sh
     ```
+    - To set the timezone to UTC use e.g. `timedatectl set-timezone Europe/London` (and reboot)
