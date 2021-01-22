@@ -18,6 +18,7 @@ const argDatabasePath = process.argv[2];
 const databasepath = argDatabasePath || "games_anon.db";
 const resultfile = "ratings.csv";
 const resultfileTournament = "tournament_ratings.csv";
+const outputCsv = false;
 const resultsJsonFile = "rating.json";
 
 // Tournament
@@ -252,8 +253,10 @@ function main(sqlError) {
         outTournament += line;
       }
     }
-    fs.writeFileSync(resultfile, out);
-    fs.writeFileSync(resultfileTournament, outTournament);
+    if (outputCsv) {
+      fs.writeFileSync(resultfile, out);
+      fs.writeFileSync(resultfileTournament, outTournament);
+    }
 
     // Reduce amount of data stored in .json file
     playerlist.forEach((player) => {
