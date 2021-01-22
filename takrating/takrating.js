@@ -3,8 +3,19 @@
 /* eslint-disable no-mixed-operators */
 /* eslint-disable no-use-before-define */
 
+const sqlite3 = require("sqlite3");
+const fs = require("fs");
+
+// arguments:
+const argDatabasePath = process.argv[2];
 // The game id of the last game of the last update:
-const lastgameid = 100191;
+const argLastGameId = parseInt(process.argv[3], 10);
+if (!argDatabasePath) {
+  throw new Error("Database path not specified. npm run rating <path/db> <lastGameId>");
+}
+if (!argLastGameId) {
+  throw new Error("Last game ID not specified. npm run rating <path/db> <lastGameId>");
+}
 
 // Rating calculation parameters:
 const initialrating = 1000;
@@ -14,10 +25,8 @@ const participationlimit = 10;
 const participationcutoff = 1500;
 
 // File names:
-const argDatabasePath = process.argv[2];
-const databasepath = argDatabasePath || "games_anon.db";
-const resultfile = "ratings.csv";
-const resultfileTournament = "tournament_ratings.csv";
+const resultfile = "rating.csv";
+const resultfileTournament = "tournament_rating.csv";
 const outputCsv = false;
 const resultsJsonFile = "rating.json";
 
@@ -49,18 +58,12 @@ const whiteadvantage = 100;
 const showratingprogression = false;
 const playerhistory = "IntuitionBot";
 
-const sqlite3 = require("sqlite3");
-const fs = require("fs");
-
-const db = new sqlite3.Database(databasepath, sqlite3.OPEN_READONLY, main);
+const db = new sqlite3.Database(argDatabasePath, sqlite3.OPEN_READONLY, main);
 
 // eslint-disable-next-line no-unused-vars
 function main(sqlError) {
   if (sqlError) {
-    console.error(`Error while loading database from ${databasepath}:`, sqlError);
-    if (!argDatabasePath) {
-      console.log("Consider specifying the path to the database");
-    }
+    console.error(`Error while loading database from ${argDatabasePath}:`, sqlError);
     return;
   }
 
@@ -211,7 +214,7 @@ function main(sqlError) {
             printGameScoreChange(data[i].player_white, data[i].player_black, whiteDelta, blackDelta);
           }
         }
-        if (data[i].id === lastgameid) {
+        if (data[i].id === argLastGameId) {
           updateDisplayRating();
           players.forEach((player) => { player.oldrating = player.displayrating; });
         }
