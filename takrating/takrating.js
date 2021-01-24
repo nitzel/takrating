@@ -6,6 +6,32 @@
 const sqlite3 = require("sqlite3");
 const fs = require("fs");
 
+// //////////////////////////////////////////////////////////////////////////////////////////////
+// SQLite helpers from https://stackoverflow.com/questions/53299322/transactions-in-node-sqlite3
+// eslint-disable-next-line func-names
+sqlite3.Database.prototype.runAsync = function (sql, ...params) {
+  return new Promise((resolve, reject) => {
+    this.run(sql, params, (err) => (err ? reject(err) : resolve(this)));
+  });
+};
+
+// eslint-disable-next-line func-names
+sqlite3.Database.prototype.runBatchAsync = function (statements) {
+  const results = [];
+  const batch = ["BEGIN", ...statements, "COMMIT"];
+  return batch.reduce(
+    (chain, statement) => chain.then((result) => {
+      results.push(result);
+      return this.runAsync(...[].concat(statement));
+    }),
+    Promise.resolve(),
+  )
+    .catch((err) => this.runAsync("ROLLBACK").then(() => Promise.reject(new Error(`${err} in statement #${results.length}`))))
+    .then(() => results.slice(2));
+};
+
+// //////////////////////////////////////////////////////////////////////////////////////////////
+
 // arguments:
 const argDatabasePath = process.argv[2];
 // The game id of the last game of the last update:
@@ -27,8 +53,11 @@ const participationcutoff = 1500;
 // File names:
 const resultfile = "rating.csv";
 const resultfileTournament = "tournament_rating.csv";
-const outputCsv = false;
 const resultsJsonFile = "rating.json";
+
+// Configuration
+const outputCsv = false;
+const updateDatabase = true;
 
 // Tournament
 const tournamentParticipants = new Set([
@@ -56,9 +85,10 @@ const tournamentParticipants = new Set([
 const goodlimit = 1600;
 const whiteadvantage = 100;
 const showratingprogression = false;
-const playerhistory = "IntuitionBot";
+const playerhistory = null; // don't console.log player history
 
-const db = new sqlite3.Database(argDatabasePath, sqlite3.OPEN_READONLY, main);
+const openDbMode = updateDatabase ? sqlite3.OPEN_READWRITE : sqlite3.OPEN_READONLY;
+const db = new sqlite3.Database(argDatabasePath, openDbMode, main);
 
 // eslint-disable-next-line no-unused-vars
 function main(sqlError) {
@@ -67,7 +97,7 @@ function main(sqlError) {
     return;
   }
 
-  // db.all("SELECT name FROM sqlite_master WHERE type='table';",tables)
+  // db.all("SELECT name FROM sqlite_master WHERE type='table';",tables) // LIMIT 10000
   db.all("SELECT * FROM games ORDER BY date ASC, id ASC;", datacb);
   function datacb(error, data) {
     const players = new Map();
@@ -149,6 +179,8 @@ function main(sqlError) {
       ratingcount[i] = 0;
     }
     let cheatcount = 0;
+    // Batch db UPDATE statements for performance
+    const dbUpdateStatements = new Array(data.length);
     for (let i = 0; i < data.length; i += 1) {
       data[i].player_black = nametranslate.get(data[i].player_black) || data[i].player_black;
       data[i].player_white = nametranslate.get(data[i].player_white) || data[i].player_white;
@@ -158,6 +190,7 @@ function main(sqlError) {
       if (cheatsurrender) {
         // console.log(data[a].player_black+" "+data[a].player_white+" "+data[a].notation)
       }
+      // todo if we don't include the players, we can still try to add their current elo (e.g. measured players vs guests/bots)
       if (includePlayer(data[i].player_white)
         && includePlayer(data[i].player_black)
         && data[i].size >= 5 && (data[i].notation !== "" || cheatsurrender)
@@ -207,8 +240,15 @@ function main(sqlError) {
             blackcount += (result === 0);
             whiteexpected += sw * (10 ** (whiteadvantage / 400)) / (sw * (10 ** (whiteadvantage / 400)) + sb);
           }
+
+          const whiteRatingPreGame = players.get(data[i].player_white).rating;
+          const blackRatingPreGame = players.get(data[i].player_black).rating;
+
           const whiteDelta = adjustPlayer(data[i].player_white, result - expected, fairness);
           const blackDelta = adjustPlayer(data[i].player_black, expected - result, fairness);
+
+          // eslint-disable-next-line max-len
+          dbUpdateStatements[i] = `UPDATE games SET white_elo=${whiteRatingPreGame}, black_elo=${blackRatingPreGame}, white_elo_delta=${whiteDelta}, black_elo_delta=${blackDelta} WHERE id=${data[i].id}`;
 
           if (data[i].player_white === playerhistory || data[i].player_black === playerhistory) {
             printGameScoreChange(data[i].player_white, data[i].player_black, whiteDelta, blackDelta);
@@ -223,6 +263,10 @@ function main(sqlError) {
     console.log("Last game in the database:", data[data.length - 1]);
     // console.log(players.TreffnonX)
     players.delete("TreffnonX");
+
+    if (updateDatabase) {
+      updateDatabaseWithElos(db, dbUpdateStatements.filter((statement) => statement));
+    }
 
     const playerlist = [...players.values()];
 
@@ -416,4 +460,29 @@ function signDelta(delta) {
   if (delta >= 0) return `+${rounded}`;
   if (rounded === 0) return `-${rounded}`;
   return `${rounded}`;
+}
+
+function updateDatabaseWithElos(database, dbUpdateStatements) {
+  console.log(`# Updating database with ${dbUpdateStatements.length} statements`);
+  // add ELO columns
+  database.runBatchAsync(
+    ["white_elo", "black_elo", "white_elo_delta", "black_elo_delta"]
+      .map((columnName) => `ALTER TABLE games ADD ${columnName} int NULL`, (err) => console.log("add column", err)),
+  )
+    .catch((err) => console.log("Error while adding ELO columns", err))
+    .then(() => {
+      database.runBatchAsync(dbUpdateStatements).then(() => {
+        console.log("# SUCCESSFULLY UPDATED DB!");
+      }).catch((err) => {
+        console.error("# BATCH UPDATE DB FAILED", err);
+      }).then(() => {
+        console.log("# Closing DB");
+        database.close((err) => {
+          if (err) {
+            console.error("# Error while closing db", err);
+          }
+          console.log("# DB closed");
+        });
+      });
+    });
 }
