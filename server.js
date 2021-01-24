@@ -1,4 +1,4 @@
-// taken from: https://nodejs.org/api/synopsis.html
+/* eslint-disable no-console */
 
 const express = require("express");
 const path = require("path");
@@ -21,7 +21,7 @@ function getLatestDatabase(directory = ".") {
     return null;
   }
 
-  const latestFile = dbFilesStats.reduce((a, b) => (a.stats.ctimeMs > b.stats.ctimeMs ? a : b));
+  const latestFile = dbFilesStats.reduce((a, b) => (a.stats.mtimeMs > b.stats.mtimeMs ? a : b));
   return latestFile.name;
 }
 
@@ -40,7 +40,6 @@ function isGameProper(row) {
 function getGamesForPlayer(db, player) {
   return new Promise((resolve, reject) => {
     // todo support multiple player names
-    // eslint-disable-next-line max-len
     const playerNames = player.split(" ");
     const placeholder = playerNames.map(() => "?").join(",");
     // eslint-disable-next-line max-len
@@ -58,16 +57,35 @@ function getGamesForPlayer(db, player) {
   });
 }
 
-const databasePath = getLatestDatabase();
-if (!databasePath) exit("No .db file found in current directory");
-const db = new sqlite3.Database(databasePath, sqlite3.OPEN_READONLY, (err) => {
-  if (err) {
-    exit(`Error while loading database from '${databasePath}'`, err.message);
-  }
-});
+/** @type {import("sqlite3").Database} */
+let db;
+
+function switchToLatestDatabase() {
+  return new Promise((resolve, reject) => {
+    if (db) {
+      return db.close((err) => (err ? reject(err) : resolve()));
+    }
+    return resolve();
+  })
+    .then(() => new Promise((resolve, reject) => {
+      const databasePath = getLatestDatabase();
+      if (!databasePath) exit("No .db file found in current directory");
+      console.log(`Switching to DB at '${databasePath}'`);
+      db = new sqlite3.Database(databasePath, sqlite3.OPEN_READONLY, (err) => {
+        if (err) {
+          return reject(new Error(`Error while loading database from '${databasePath}': ${err.message}`));
+        }
+        console.log(`Successfully switched to DB at '${databasePath}'`);
+        return resolve();
+      });
+    }));
+}
+
+switchToLatestDatabase();
 
 const hostname = "0.0.0.0";
 const port = 8080;
+const portDbApp = 8081;
 
 const absoluteRatingPath = path.join(__dirname, "./rating.json");
 
@@ -95,6 +113,19 @@ app.get("/api/player/:playername", async (req, res) => {
 });
 
 app.listen(port, hostname, () => {
-  // eslint-disable-next-line no-console
-  console.log(`Example app listening at http://localhost:${port}`);
+  console.log(`Tak rating app listening at http://${hostname}:${port}`);
+});
+
+const appForDb = express();
+appForDb.get("/db/switch", async (req, res) => {
+  console.log("! Received request to switch to latest DB");
+  await switchToLatestDatabase();
+  console.log("! Switched to latest DB");
+  res.send();
+});
+
+// This is explicitly only available on localhost,
+// so that the rating script can notify the server to connect to the latest DB
+appForDb.listen(portDbApp, "localhost", () => {
+  console.log(`DB Switching App listening on http://localhost:${portDbApp}`);
 });

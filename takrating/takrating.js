@@ -5,6 +5,7 @@
 
 const sqlite3 = require("sqlite3");
 const fs = require("fs");
+const fetch = require("node-fetch");
 
 // //////////////////////////////////////////////////////////////////////////////////////////////
 // SQLite helpers from https://stackoverflow.com/questions/53299322/transactions-in-node-sqlite3
@@ -58,6 +59,7 @@ const resultsJsonFile = "rating.json";
 // Configuration
 const outputCsv = false;
 const updateDatabase = true;
+const API_SWITCH_DB = "http://localhost:8081/db/switch";
 
 // Tournament
 const tournamentParticipants = new Set([
@@ -265,7 +267,13 @@ function main(sqlError) {
     players.delete("TreffnonX");
 
     if (updateDatabase) {
-      updateDatabaseWithElos(db, dbUpdateStatements.filter((statement) => statement));
+      updateDatabaseWithElosAndClose(db, dbUpdateStatements.filter((statement) => statement))
+        .then(() => {
+          console.log("! Requesting db switch");
+          fetch(API_SWITCH_DB)
+            .then(() => console.log("! Requesting db switch - SUCCESSFUL"))
+            .catch((err) => console.error("! Requesting db switch - FAILED", err));
+        });
     }
 
     const playerlist = [...players.values()];
@@ -462,27 +470,30 @@ function signDelta(delta) {
   return `${rounded}`;
 }
 
-function updateDatabaseWithElos(database, dbUpdateStatements) {
+function updateDatabaseWithElosAndClose(database, dbUpdateStatements) {
   console.log(`# Updating database with ${dbUpdateStatements.length} statements`);
   // add ELO columns
-  database.runBatchAsync(
+  return database.runBatchAsync(
     ["white_elo", "black_elo", "white_elo_delta", "black_elo_delta"]
       .map((columnName) => `ALTER TABLE games ADD ${columnName} int NULL`, (err) => console.log("add column", err)),
   )
     .catch((err) => console.log("Error while adding ELO columns", err))
-    .then(() => {
+    .then(() => new Promise((resolve, reject) => {
       database.runBatchAsync(dbUpdateStatements).then(() => {
         console.log("# SUCCESSFULLY UPDATED DB!");
       }).catch((err) => {
         console.error("# BATCH UPDATE DB FAILED", err);
+        reject();
       }).then(() => {
         console.log("# Closing DB");
         database.close((err) => {
           if (err) {
             console.error("# Error while closing db", err);
+            return reject();
           }
           console.log("# DB closed");
+          return resolve();
         });
       });
-    });
+    }));
 }
