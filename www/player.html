@@ -12,34 +12,43 @@
     <title>Tak rating</title>
   </head>
   <body>
-    <h1>Tak rating</h1>
+    <h1>Tak rating of player <span id="playername">?</span></h1>
     <h4 class="error" id="js-disabled">Please enable JavaScript.</h4>
     <h4 class="error hidden" id="browser-not-supported">Sorry, your browser is not supported. Please install a more recent one.</h4>
-    <div>
-      Last game: <span id="lastGame"></span>. New games are loaded every day at 17:05 (UTC) and take only a few minutes to process.
-    </div>
 
-    <table id="rating" class="table table-striped table-hover">
+    <a href="/">Back to overview</a>
+
+    <table id="games" class="table table-striped table-hover">
       <thead>
         <tr>
-          <th scope="col" class="id">#</th>
-          <th scope="col" class="name">Name</th>
-          <th scope="col" class="rating">ELO</th>
-          <th scope="col" class="development">Development</th>
-          <th scope="col" class="games">Games</th>
+          <th scope="col" class="date">Date (UTC)</th>
+          <th scope="col" class="white rating">ELO</th>
+          <th scope="col" class="white delta">&Delta;</th>
+          <th scope="col" class="white name">White</th>
+          <th scope="col" class="result">Result</th>
+          <th scope="col" class="black name">Black</th>
+          <th scope="col" class="black rating">ELO</th>
+          <th scope="col" class="black delta">&Delta;</th>
+          <th scope="col" class="black delta">Size</th>
+          <th scope="col" class="black delta">Timer</th>
         </tr>
       </thead>
       <tbody>
-        <tr><td colspan="5">Loading...</td></td>
+        <tr><td colspan="10">Loading...</td></td>
       </tbody>
     </table>
-    <template id="player-row">
+    <template id="game-row">
       <tr>
-        <td class="id" scope="row"></td>
-        <td class="name"><a class="main"></a><span class="alternatives"></span></td>
-        <td class="rating"></td>
-        <td class="development"></td>
-        <td class="games"></td>
+        <td class="date" scope="row"></td>
+        <td class="white rating"></td>
+        <td class="white development"></td>
+        <td class="white name"></td>
+        <td class="result"></td>
+        <td class="black name"></td>
+        <td class="black rating"></td>
+        <td class="black development"></td>
+        <td class="size"></td>
+        <td class="time"></td>
       </tr>
     </template>
 
