@@ -19,19 +19,19 @@
 
     <a href="/">Back to overview</a>
 
-    <table id="games" class="table table-striped table-hover">
+    <table id="games" class="table table-sm table-striped table-hover">
       <thead>
         <tr>
           <th scope="col" class="date">Date (UTC)</th>
           <th scope="col" class="white rating">ELO</th>
-          <th scope="col" class="white delta">&Delta;</th>
+          <th scope="col" class="white development">&Delta;</th>
           <th scope="col" class="white name">White</th>
           <th scope="col" class="result">Result</th>
           <th scope="col" class="black name">Black</th>
           <th scope="col" class="black rating">ELO</th>
-          <th scope="col" class="black delta">&Delta;</th>
-          <th scope="col" class="black delta">Size</th>
-          <th scope="col" class="black delta">Timer</th>
+          <th scope="col" class="black development">&Delta;</th>
+          <th scope="col" class="size">Size</th>
+          <th scope="col" class="timer">Timer</th>
         </tr>
       </thead>
       <tbody>
@@ -40,7 +40,7 @@
     </table>
     <template id="game-row">
       <tr>
-        <td class="date" scope="row"></td>
+        <td class="date" scope="row"><a></a></td>
         <td class="white rating"></td>
         <td class="white development"></td>
         <td class="white name"></td>

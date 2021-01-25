@@ -88,16 +88,48 @@ function loadStatistics() {
 // //////////////////////////////////////////
 // Player
 
-function updatePlayerPage(data) {
+const resultToClassMapping = new Map([
+  ["1-0", 1],
+  ["F-0", 1],
+  ["R-0", 1],
+  ["0-1", -1],
+  ["0-R", -1],
+  ["0-F", -1],
+  ["1/2-1/2", 0],
+]);
+
+function updatePlayerPage(data, playerName) {
+  const playerNames = playerName.split(" ").map((name) => name.toLowerCase());
+  function isCurrentPlayer(name) {
+    return playerNames.includes(name);
+  }
+
+  function getClassForResult(playerWhite, result) {
+    const r = resultToClassMapping.get(result) * (isCurrentPlayer(playerWhite) ? 1 : -1);
+    switch (r) {
+      case 1: return "table-success";
+      case -1: return "table-danger";
+      case 0: return "table-warning";
+      default: return "";
+    }
+  }
+
   function createGameRow(template, game) {
     const clone = template.content.cloneNode(true);
-    const tds = clone.querySelectorAll("td");
+    const tds = [...clone.querySelectorAll("td")];
     const round = (n) => (n ? n.toFixed(0) : n);
     const prefix = (n) => {
       if (n == null) return "";
       return n < 0 ? round(n) : `+${round(n)}`;
     };
 
+    const classForResult = getClassForResult(game.player_white, game.result);
+    if (classForResult) {
+      tds[4].classList.add(classForResult);
+    }
+
+    tds[0] = tds[0].querySelector("a");
+    tds[0].href = `https://www.playtak.com/games/${game.id}/ninjaviewer`;
     [
       getUTCDateAndTimeString(game.date),
       round(game.white_elo),
@@ -112,6 +144,12 @@ function updatePlayerPage(data) {
     ].forEach((text, i) => {
       tds[i].textContent = text;
     });
+
+    if (isCurrentPlayer(game.player_white)) {
+      tds[3].classList.add("current");
+    } else {
+      tds[5].classList.add("current");
+    }
 
     [[2, game.white_elo_delta], [7, game.black_elo_delta]].forEach(([i, delta]) => {
       if (delta >= 0) {
@@ -153,7 +191,7 @@ function loadPlayer(playername) {
     }
 
     response.json()
-      .then((json) => updatePlayerPage(json))
+      .then((json) => updatePlayerPage(json, playername))
       .catch((err) => console.error("Failed to parse JSON from ratings", err));
   });
 }

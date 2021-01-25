@@ -37,3 +37,21 @@ table tr .development,
 table tr .games {
   text-align: right;
 }
+
+/* player */
+
+.name.current {
+  font-weight: bold;
+}
+
+.name.white {
+  text-align: right;
+}
+
+.result {
+  text-align: center;
+}
+
+.white.development, .black.development {
+  text-align: left;
+}
