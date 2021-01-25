@@ -38,6 +38,10 @@ table tr .games {
   text-align: right;
 }
 
+.table {
+  width: auto !important;
+}
+
 /* player */
 
 .name.current {
