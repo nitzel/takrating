@@ -22,6 +22,7 @@
       ```
       iptables -t nat -I PREROUTING -p tcp --dport 80 -j REDIRECT --to-port 8080
       ```
+      Since this shall persist restarts, add it to `/etc/network/interfaces` as described [here](https://serverfault.com/a/232584/527773)
 - Setting up the cronjob
   - `apt install jq` to parse the json file for updating
   - `chmod +x ./update.sh` to make it executable
@@ -29,6 +30,6 @@
     ```
     # Update at 17:10 UTC every day. If your machine is not UTC, change accordingly.
     # It might be the best to change your machine's timezone to UTC.
-    10 5 * * * cd ~/takrating && ./update.sh
+    10 17 * * * cd ~/takrating && ./update.sh
     ```
     - To set the timezone to UTC use e.g. `timedatectl set-timezone Europe/London` (and reboot)
