@@ -50,6 +50,7 @@ const bonusrating = 550;
 const bonusfactor = 60;
 const participationlimit = 10;
 const participationcutoff = 1500;
+const maxDrop = 200;
 
 // File names:
 const resultfile = "rating.csv";
@@ -84,8 +85,9 @@ const tournamentParticipants = new Set([
 ]);
 
 // Statistics parameters, does not affect rating calculation:
+const goodSize = 6;
 const goodlimit = 1600;
-const whiteadvantage = 100;
+const whiteadvantage = 69;
 const showratingprogression = false;
 const playerhistory = null; // don't console.log player history
 
@@ -128,12 +130,9 @@ function main(sqlError) {
       ["0-F", 0],
     ]);
 
+    /** These are the nametranslate-ed names */
     const botNames = new Set([
-      "TakticianBot",
-      "alphatak_bot",
-      "alphabot",
       "cutak_bot",
-      "TakticianBotDev",
       "takkybot",
       "ShlktBot",
       "AlphaTakBot_5x5",
@@ -142,7 +141,15 @@ function main(sqlError) {
       "TakticianBot TakticianBotDev",
       "TakkerusBot",
       "IntuitionBot",
-      "TakkenBot",
+      "AaaarghBot",
+      "TakkerBot",
+      "TakkenBot kriTakBot robot",
+      "Geust93",
+      "CairnBot",
+      "VerekaiBot1",
+      "BloodlessBot",
+      "Tiltak_Bot",
+      "Taik",
     ]);
 
     const nametranslate = new Map([
@@ -172,10 +179,19 @@ function main(sqlError) {
       ["DragonTakerDG", "dylandragon DragonTakerDG"],
       ["Abyss", "Abyss Bullet"],
       ["Bullet", "Abyss Bullet"],
-      ["Syme", "Syme Saemon"],
-      ["Saemon", "Syme Saemon"],
+      ["Syme", "Syme Saemon Alpha"],
+      ["Saemon", "Syme Saemon Alpha"],
+      ["Alpha", "Syme Saemon Alpha"],
+      ["LuKAs", "LuKAs pse711933"],
+      ["pse711933", "LuKAs pse711933"],
+      ["archvenison", "archvenison rossin megafauna"],
+      ["rossin", "archvenison rossin megafauna"],
+      ["megafauna", "archvenison rossin megafauna"],
+      ["TakkenBot", "TakkenBot kriTakBot robot"],
+      ["kriTakBot", "TakkenBot kriTakBot robot"],
+      ["robot", "TakkenBot kriTakBot robot"],
     ]);
-    const blankexcepted = new Set(["Simmon Manet"]);
+    const blankexcepted = new Set([]); // Add player names to except
     for (let i = 0; i < 200; i += 1) {
       ratingsum[i] = 0;
       ratingcount[i] = 0;
@@ -201,19 +217,19 @@ function main(sqlError) {
           players.forEach((player) => {
             player.participation = Math.min(player.participation * 0.995, 20);
           });
-          console.log("day");
+          // console.log("day");
         }
         let hiccup = false;
         if (data[i].date - lasttime < 1000 && data[i].player_white === data[i - 1].player_white) {
           hiccup = true;
-          // console.log("Hiccup2 "+data[a].result+" "+data[a].date)
+          // console.log(`Hiccup2 ${data[i].result} ${data[i].date} ${data[i].player_white}`);
         }
         if (i + 1 !== data.length && data[i + 1].date - data[i].date < 1000 && data[i + 1].player_white === data[i].player_white) {
           if (data[i + 1].result.indexOf("0") !== data[i].result.indexOf("0")) {
             hiccup = true;
-            // console.log("Hiccup1 "+data[a].result+" "+data[a].date)
+            // console.log(`Hiccup1 ${data[i].result} ${data[i].date} ${data[i].player_white}`);
           } else {
-            // console.log("Nohiccup1 "+data[a].result+" "+data[a].date)
+            // console.log(`Nohiccup1 ${data[i].result} ${data[i].date} ${data[i].player_white}`);
           }
         }
         firsttime = Math.min(firsttime, data[i].date);
@@ -232,7 +248,7 @@ function main(sqlError) {
             && sb > 10 ** (goodlimit / 400)
             && !isBot(data[i].player_white)
             && !isBot(data[i].player_black)
-            && data[i].size === 5) {
+            && data[i].size === goodSize) {
             flatcount += (data[i].result === "F-0" || data[i].result === "0-F");
             roadcount += (data[i].result === "R-0" || data[i].result === "0-R");
             drawcount += (data[i].result === "1/2-1/2");
@@ -262,9 +278,6 @@ function main(sqlError) {
         }
       }
     }
-    console.log("Last game in the database:", data[data.length - 1]);
-    // console.log(players.TreffnonX)
-    players.delete("TreffnonX");
 
     if (updateDatabase) {
       updateDatabaseWithElosAndClose(db, dbUpdateStatements.filter((statement) => statement))
@@ -429,10 +442,16 @@ function main(sqlError) {
     }
 
     function includePlayer(name) {
-      return name !== "Anon"
+      return name !== "FlashBot"
+        && name !== "Anon"
         && name !== "FriendlyBot"
+        && name !== "FPABot"
         && name !== "cutak_bot"
+        && name !== "sTAKbot1"
+        && name !== "sTAKbot2"
+        && name !== "DoubleStackBot"
         && name !== "antakonistbot"
+        && name !== "CairnBot"
         && !/^Guest[0-9]+$/.test(name); // && isbot(name)!==1
     }
 
@@ -451,8 +470,11 @@ function main(sqlError) {
     function updateDisplayRating() {
       players.forEach((player) => {
         player.displayrating = player.rating;
-        if (player.participation < participationlimit && player.rating > participationcutoff) {
-          player.displayrating = participationcutoff + ((player.rating - participationcutoff) * player.participation) / participationlimit;
+        if (player.rating > participationcutoff) {
+          if (player.participation < participationlimit * Math.min(1, (player.rating - participationcutoff) / maxDrop)) {
+            player.displayrating = (Math.max(player.rating, participationcutoff + maxDrop)
+              - maxDrop * (1 - player.participation / participationlimit));
+          }
         }
       });
     }
