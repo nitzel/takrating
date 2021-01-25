@@ -101,7 +101,7 @@ const resultToClassMapping = new Map([
 function updatePlayerPage(data, playerName) {
   const playerNames = playerName.split(" ").map((name) => name.toLowerCase());
   function isCurrentPlayer(name) {
-    return playerNames.includes(name);
+    return playerNames.includes(name.toLowerCase());
   }
 
   function getClassForResult(playerWhite, result) {
