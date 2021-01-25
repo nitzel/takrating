@@ -33,8 +33,8 @@ function isGameProper(row) {
 
   const plyCount = countPlys(row.notation);
   const size = parseInt(row.size, 10);
-  // console.log(plyCount, size);
-  return plyCount < size * 2; // Not enough moves to warrant a game
+
+  return plyCount > size * 2; // Minimum number of plys to warrant a proper game
 }
 
 function getGamesForPlayer(db, player) {
