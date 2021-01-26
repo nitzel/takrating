@@ -92,11 +92,12 @@ const absoluteRatingPath = path.join(__dirname, "./rating.json");
 
 const app = express();
 app.use(compression());
-app.use("/static", express.static(path.join(__dirname, "www")));
+app.use("/", express.static(path.join(__dirname, "www")));
 app.use("/rating.json", express.static(absoluteRatingPath));
 
-app.get("/", (req, res) => {
-  res.redirect("/static");
+// This is only because previously the data was served at /static - but now it's under /
+app.get("/static*", (req, res) => {
+  res.redirect("/");
 });
 
 app.get("/api/rating", (req, res) => {

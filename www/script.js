@@ -40,7 +40,7 @@ function createPlayerRow(template, rank, player) {
   const [mainName, ...alternatives] = player.name.split(" ");
   const mainNameElement = tds[1].querySelector(".main");
   mainNameElement.textContent = mainName;
-  mainNameElement.href = `/static/player.html?name=${player.name}`;
+  mainNameElement.href = `./player.html?name=${player.name}`;
   tds[1].querySelector(".alternatives").textContent = alternatives;
   tds[2].textContent = player.displayrating;
   const delta = player.displayrating - player.oldrating;
