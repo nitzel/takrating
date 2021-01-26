@@ -1,6 +1,7 @@
 /* eslint-disable no-console */
 
 const express = require("express");
+const compression = require("compression");
 const path = require("path");
 const sqlite3 = require("sqlite3").verbose();
 const fs = require("fs");
@@ -90,6 +91,7 @@ const portDbApp = 8081;
 const absoluteRatingPath = path.join(__dirname, "./rating.json");
 
 const app = express();
+app.use(compression());
 app.use("/static", express.static(path.join(__dirname, "www")));
 app.use("/rating.json", express.static(absoluteRatingPath));
 
