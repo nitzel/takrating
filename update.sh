@@ -3,7 +3,7 @@
 db_filename=games_$(date -u +%Y%m%dT%H%M%S).db
 db_url="https://www.playtak.com/games_anon.db"
 echo "Downloading $db_url to $db_filename"
-curl $db_url --output $file_name
+curl $db_url --output $db_filename
 
 rating_filename="rating.json"
 rating_url="https://www.playtak.com/ratinglist.json"
