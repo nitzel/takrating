@@ -1,18 +1,16 @@
 #!/bin/sh
 
-file_name=games_$(date -u +%Y%m%dT%H%M%S).db
-echo "Downloading $file_name"
-curl "https://www.playtak.com/games_anon.db" --output $file_name
+db_filename=games_$(date -u +%Y%m%dT%H%M%S).db
+db_url="https://www.playtak.com/games_anon.db"
+echo "Downloading $db_url to $db_filename"
+curl $db_url --output $file_name
 
-rating_file="./rating.json"
-if test -f $rating_file; 
-then
-  last_game_id=$(cat $rating_file | jq ".lastGameId")
-else
-  last_game_id=0
-fi
-echo "Beginning rating calculation with lastGameId $last_game_id"
+rating_filename="rating.json"
+rating_url="https://www.playtak.com/ratinglist.json"
+echo "Downloading $rating_url to $rating_filename"
+curl $rating_url --output $rating_filename
 
-npm run rating $file_name $last_game_id > $file_name.update.log
+api_switch_db="http://localhost:8081/db/switch";
+echo "Notify rating-server of new database ($api_switch_db)"
+curl $api_switch_db --output /dev/null
 
-echo "Done"

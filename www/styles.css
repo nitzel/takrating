@@ -6,6 +6,20 @@
   float: right;
 }
 
+.inactive .rating {
+  cursor: help;
+}
+
+.inactive .rating:before {
+  content: "*";
+}
+
+.inactive:hover .rating:before {
+  content: "?";
+  font-size: small;
+  vertical-align: top;
+}
+
 .name {
   color: inherit;
 }
@@ -19,17 +33,8 @@
   font-style: italic;
 }
 
-.development.up {
-  color: limegreen;
-}
-
-.development.down {
-  color: red;
-}
-
 table tr .name,
-table tr .id,
-table tr .development {
+table tr .id {
   text-align: left;
 }
 
@@ -58,4 +63,12 @@ table tr .games {
 
 .white.development, .black.development {
   text-align: left;
+}
+
+.development.up {
+  color: limegreen;
+}
+
+.development.down {
+  color: red;
 }

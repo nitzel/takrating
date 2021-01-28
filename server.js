@@ -124,7 +124,7 @@ appForDb.get("/db/switch", async (req, res) => {
   console.log("! Received request to switch to latest DB");
   await switchToLatestDatabase();
   console.log("! Switched to latest DB");
-  res.send();
+  res.send("switched");
 });
 
 // This is explicitly only available on localhost,

@@ -18,7 +18,7 @@
     <h4 class="error" id="js-disabled">Please enable JavaScript.</h4>
     <h4 class="error hidden" id="browser-not-supported">Sorry, your browser is not supported. Please install a more recent one.</h4>
     <div>
-      Last game: <span id="lastGame"></span>. New games are loaded every day at 17:05 (UTC) and take only a few minutes to process.
+      New statistics are loaded every day at 17:05 (UTC) from <a href="https://playtak.com/">playtak.com</a>.
     </div>
 
     <table id="rating" class="table table-sm table-striped table-hover">
@@ -27,12 +27,11 @@
           <th scope="col" class="id">#</th>
           <th scope="col" class="name">Name</th>
           <th scope="col" class="rating">ELO</th>
-          <th scope="col" class="development">&Delta;</th>
           <th scope="col" class="games">Games</th>
         </tr>
       </thead>
       <tbody>
-        <tr><td colspan="5">Loading...</td></td>
+        <tr><td colspan="4">Loading...</td></td>
       </tbody>
     </table>
     <template id="player-row">
@@ -40,7 +39,6 @@
         <td class="id" scope="row"></td>
         <td class="name"><a class="main"></a><span class="alternatives"></span></td>
         <td class="rating"></td>
-        <td class="development"></td>
         <td class="games"></td>
       </tr>
     </template>

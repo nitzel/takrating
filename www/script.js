@@ -41,27 +41,32 @@ const prefix = (n) => {
 // Overall statistics
 
 function createPlayerRow(template, rank, player) {
+  const [names, adjustedRating, rating, ratedGames, isBot] = player;
   const clone = template.content.cloneNode(true);
-  const tds = clone.querySelectorAll("td");
-  tds[0].textContent = rank;
-  // eslint-disable-next-line prefer-destructuring
-  const [mainName, ...alternatives] = player.name.split(" ");
-  const mainNameElement = tds[1].querySelector(".main");
-  mainNameElement.textContent = mainName;
-  mainNameElement.href = `./player.html?name=${player.name}`;
-  tds[1].querySelector(".alternatives").textContent = alternatives;
-  tds[2].textContent = player.displayrating;
-  const delta = player.displayrating - player.oldrating;
-  tds[3].textContent = prefix(delta);
-  if (delta > 0) {
-    tds[3].classList.add("up");
-    tds[3].classList.remove("down");
-  } else if (delta < 0) {
-    tds[3].classList.add("down");
-    tds[3].classList.remove("up");
+  const tr = clone.firstElementChild;
+  const tds = tr.children;
+
+  const inactive = adjustedRating !== rating;
+
+  if (isBot) {
+    tr.classList.add("bot");
   }
 
-  tds[4].textContent = player.games;
+  tds[0].textContent = rank;
+
+  const [mainName, ...alternatives] = names.split(" ");
+  const mainNameElement = tds[1].querySelector(".main");
+  mainNameElement.textContent = mainName;
+  mainNameElement.href = `./player.html?name=${names}`;
+  tds[1].querySelector(".alternatives").textContent = alternatives;
+
+  tds[2].textContent = adjustedRating;
+  if (inactive) {
+    tds[2].title = `This player's rating has been lowered from ${rating} to ${adjustedRating} because they haven't played in a while.`;
+    tr.classList.add("inactive");
+  }
+
+  tds[3].textContent = ratedGames;
 
   return clone;
 }
@@ -75,9 +80,9 @@ function updatePlayerTable(players) {
 }
 
 function updateStatistics(statistics) {
-  getElement("#lastGame").innerHTML = `${getUTCDateAndTimeString(statistics.timespan.to)} (UTC)`;
+  console.log(statistics);
 
-  updatePlayerTable(statistics.players);
+  updatePlayerTable(statistics);
 }
 
 function loadStatistics() {
@@ -157,10 +162,8 @@ function updatePlayerPage(data, playerName) {
     [[2, game.rating_change_white], [7, game.rating_change_black]].forEach(([i, delta]) => {
       if (delta > 0) {
         tds[i].classList.add("up");
-        tds[i].classList.remove("down");
       } else if (delta < 0) {
         tds[i].classList.add("down");
-        tds[i].classList.remove("up");
       }
     });
 
