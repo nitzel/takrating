@@ -29,6 +29,14 @@ function getUTCDateAndTimeString(dateInMsSince1970) {
   return `${getUTCDateString(dateInMsSince1970)} ${getUTCTimeString(dateInMsSince1970)}`;
 }
 
+const round = (n) => (n ? n.toFixed(0) : n);
+
+const prefix = (n) => {
+  if (n == null) return "";
+  if (n === 0) return "-";
+  return n < 0 ? round(n) : `+${round(n)}`;
+};
+
 // //////////////////////////////////////////
 // Overall statistics
 
@@ -44,11 +52,11 @@ function createPlayerRow(template, rank, player) {
   tds[1].querySelector(".alternatives").textContent = alternatives;
   tds[2].textContent = player.displayrating;
   const delta = player.displayrating - player.oldrating;
-  tds[3].textContent = delta < 0 ? delta : `+${delta}`;
-  if (delta >= 0) {
+  tds[3].textContent = prefix(delta);
+  if (delta > 0) {
     tds[3].classList.add("up");
     tds[3].classList.remove("down");
-  } else {
+  } else if (delta < 0) {
     tds[3].classList.add("down");
     tds[3].classList.remove("up");
   }
@@ -117,11 +125,6 @@ function updatePlayerPage(data, playerName) {
   function createGameRow(template, game) {
     const clone = template.content.cloneNode(true);
     const tds = [...clone.querySelectorAll("td")];
-    const round = (n) => (n ? n.toFixed(0) : n);
-    const prefix = (n) => {
-      if (n == null) return "";
-      return n < 0 ? round(n) : `+${round(n)}`;
-    };
 
     const classForResult = getClassForResult(game.player_white, game.result);
     if (classForResult) {
@@ -132,13 +135,13 @@ function updatePlayerPage(data, playerName) {
     tds[0].href = `https://www.playtak.com/games/${game.id}/ninjaviewer`;
     [
       getUTCDateAndTimeString(game.date),
-      round(game.white_elo),
-      prefix(game.white_elo_delta),
+      round(game.rating_white),
+      prefix(game.rating_change_white / 10),
       game.player_white,
       game.result,
       game.player_black,
-      round(game.black_elo),
-      prefix(game.black_elo_delta),
+      round(game.rating_black),
+      prefix(game.rating_change_black / 10),
       game.size,
       `${game.timertime / 60}+${game.timerinc}`,
     ].forEach((text, i) => {
@@ -151,11 +154,11 @@ function updatePlayerPage(data, playerName) {
       tds[5].classList.add("current");
     }
 
-    [[2, game.white_elo_delta], [7, game.black_elo_delta]].forEach(([i, delta]) => {
-      if (delta >= 0) {
+    [[2, game.rating_change_white], [7, game.rating_change_black]].forEach(([i, delta]) => {
+      if (delta > 0) {
         tds[i].classList.add("up");
         tds[i].classList.remove("down");
-      } else {
+      } else if (delta < 0) {
         tds[i].classList.add("down");
         tds[i].classList.remove("up");
       }
