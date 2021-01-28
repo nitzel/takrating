@@ -20,6 +20,15 @@
   vertical-align: top;
 }
 
+.bot .name .main:after {
+  content: "*";
+}
+
+.bot .name:hover .main:after {
+  content: " - I am a bot";
+  font-style: italic;
+}
+
 .name {
   color: inherit;
 }
