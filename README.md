@@ -12,7 +12,7 @@ This webserver shows the ratings of all players. One can also see how all the ga
 # Setting up the service
 - Web Server
   - `npm install pm2 --global` to keep the web server running
-  - `pm2 start ./server.js`
+  - `pm2 start ecosystem.config.js` (read more about [pm2 ecosystem files](https://pm2.keymetrics.io/docs/usage/application-declaration/))
     - `pm2 save`
     - Run `pm2 startup` and follow the output to make sure your service starts after a machine reboot
   - `ufw allow 8080` or whatever port you'd like to expose it through
