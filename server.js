@@ -3,9 +3,8 @@
 const express = require("express");
 const compression = require("compression");
 const path = require("path");
-const sqlite3 = require("sqlite3").verbose();
+const Database = require("better-sqlite3");
 const fs = require("fs");
-const { exit } = require("process");
 
 function countPlys(notation) {
   return notation.split(",").length;
@@ -26,6 +25,11 @@ function getLatestDatabase(directory = ".") {
   return latestFile.name;
 }
 
+/**
+ * Returns false if the game was abandonded after a few moves.
+ * @param {{result: string, notation: string, size: number}} row
+ */
+// eslint-disable-next-line no-unused-vars
 function isGameProper(row) {
   if (row.result !== "1-0" && row.result !== "0-1") {
     // Road, flat wins and accepted draws are always valid
@@ -33,53 +37,67 @@ function isGameProper(row) {
   }
 
   const plyCount = countPlys(row.notation);
-  const size = parseInt(row.size, 10);
-
-  return plyCount > size * 2; // Minimum number of plys to warrant a proper game
+  return plyCount > row.size * 2; // Minimum number of plys to warrant a proper game
 }
 
+/** @type {Map<number, Database.Statement>} */
+const preparedStatements = new Map();
+
+/**
+ * @param db {Database.Database}
+ * @param playerNames {number}
+ */
+function getGamesForPlayerStatement(db, playerNames) {
+  if (preparedStatements.has(playerNames.length)) {
+    return preparedStatements.get(playerNames.length);
+  }
+  console.log("creatign new statement for", playerNames.length, "player names");
+
+  const placeholder = playerNames.map(() => "?").join(",");
+  // eslint-disable-next-line max-len
+  const query = `SELECT * FROM games WHERE player_white COLLATE NOCASE IN (${placeholder}) or player_black COLLATE NOCASE IN (${placeholder}) ORDER BY id DESC`;
+  const stmt = db.prepare(query);
+  preparedStatements.set(playerNames.length, stmt);
+  return stmt;
+}
+
+/**
+ * @param db {Database.Database}
+ */
 function getGamesForPlayer(db, player) {
   return new Promise((resolve, reject) => {
-    // todo support multiple player names
     const playerNames = player.split(" ");
-    const placeholder = playerNames.map(() => "?").join(",");
-    // eslint-disable-next-line max-len
-    const query = `SELECT * FROM games WHERE player_white COLLATE NOCASE IN (${placeholder}) or player_black COLLATE NOCASE IN (${placeholder}) ORDER BY id DESC`;
-    db.all(
-      query,
-      [...playerNames, ...playerNames],
-      (err, rows) => {
-        if (err) {
-          return reject(err);
-        }
-        return resolve(rows.filter(isGameProper));
-      },
-    );
+
+    const stmt = getGamesForPlayerStatement(db, playerNames);
+
+    const games = stmt.all(...playerNames, ...playerNames);
+    if (games) {
+      const properGames = games.filter(isGameProper);
+      return resolve(properGames);
+    }
+    return reject();
   });
 }
 
-/** @type {import("sqlite3").Database} */
+/** @type {Database.Database} */
 let db;
 
 function switchToLatestDatabase() {
-  return new Promise((resolve, reject) => {
-    if (db) {
-      return db.close((err) => (err ? reject(err) : resolve()));
-    }
-    return resolve();
-  })
-    .then(() => new Promise((resolve, reject) => {
-      const databasePath = getLatestDatabase();
-      if (!databasePath) exit("No .db file found in current directory");
-      console.log(`Switching to DB at '${databasePath}'`);
-      db = new sqlite3.Database(databasePath, sqlite3.OPEN_READONLY, (err) => {
-        if (err) {
-          return reject(new Error(`Error while loading database from '${databasePath}': ${err.message}`));
-        }
-        console.log(`Successfully switched to DB at '${databasePath}'`);
-        return resolve();
-      });
-    }));
+  if (db) {
+    db.close();
+    db = undefined;
+  }
+  const databasePath = getLatestDatabase();
+  if (!databasePath) return ("No .db file found in current directory");
+  console.log(`Switching to DB at '${databasePath}'`);
+  try {
+    db = new Database(databasePath, { readonly: true, fileMustExist: true });
+  } catch (err) {
+    console.error(err);
+    return err;
+  }
+  preparedStatements.clear();
+  return null;
 }
 
 switchToLatestDatabase();
@@ -96,12 +114,11 @@ app.use("/", express.static(path.join(__dirname, "www")));
 app.use("/rating.json", express.static(absoluteRatingPath));
 
 // This is only because previously the data was served at /static - but now it's under /
-app.get("/static*", (req, res) => {
+app.get("/static*", async (req, res) => {
   res.redirect("/");
 });
 
-app.get("/api/rating", (req, res) => {
-  // res.statusCode = 200;
+app.get("/api/rating", async (req, res) => {
   res.sendFile(absoluteRatingPath);
 });
 app.get("/api/player/:playername", async (req, res) => {
@@ -122,9 +139,14 @@ app.listen(port, hostname, () => {
 const appForDb = express();
 appForDb.get("/db/switch", async (req, res) => {
   console.log("! Received request to switch to latest DB");
-  await switchToLatestDatabase();
-  console.log("! Switched to latest DB");
-  res.send("switched");
+  const error = switchToLatestDatabase();
+  if (error) {
+    console.log("! Failed to switch DB", error);
+    res.status = 404;
+    return res.send(error);
+  }
+  console.log("! Successfully switched DB");
+  return res.send("switched");
 });
 
 // This is explicitly only available on localhost,

@@ -2,16 +2,13 @@
   "name": "takrating",
   "version": "1.0.0",
   "scripts": {
-    "rating": "node ./takrating/takrating.js",
-    "server": "node server.js",
-    "server:watch": "forever -w ./takrating/takrating.js"
+    "server": "node server.js"
   },
   "dependencies": {
+    "better-sqlite3": "^7.1.2",
     "compression": "^1.7.4",
     "express": "^4.17.1",
-    "node-fetch": "^2.6.1",
-    "path": "^0.12.7",
-    "sqlite3": "~5"
+    "path": "^0.12.7"
   },
   "devDependencies": {
     "eslint": "^7.18.0",
