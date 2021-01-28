@@ -13,5 +13,6 @@ module.exports = {
   rules: {
     quotes: ["error", "double", { allowTemplateLiterals: true }],
     "max-len": ["error", 140, { ignoreTrailingComments: true }],
+    "linebreak-style": ["error", "windows"],
   },
 };
