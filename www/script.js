@@ -31,10 +31,11 @@ function getUTCDateAndTimeString(dateInMsSince1970) {
 
 const round = (n) => (n ? n.toFixed(0) : n);
 
-const prefix = (n) => {
-  if (n == null) return "";
-  if (n === 0) return "-";
-  return n < 0 ? round(n) : `+${round(n)}`;
+const formatRatingChange = (change) => {
+  if (change == null || change === -1000) return "";
+  if (change === 0) return "-";
+  const delta = (change / 10).toFixed(1); // rating_change is stored multiplied by 10
+  return change < 0 ? delta : `+${delta}`;
 };
 
 // //////////////////////////////////////////
@@ -141,12 +142,12 @@ function updatePlayerPage(data, playerName) {
     [
       getUTCDateAndTimeString(game.date),
       round(game.rating_white),
-      prefix(game.rating_change_white / 10),
+      formatRatingChange(game.rating_change_white),
       game.player_white,
       game.result,
       game.player_black,
       round(game.rating_black),
-      prefix(game.rating_change_black / 10),
+      formatRatingChange(game.rating_change_black),
       game.size,
       `${game.timertime / 60}+${game.timerinc}`,
     ].forEach((text, i) => {
